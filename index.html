@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Lịch tiêm chủng dự kiến cho bé</title>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<style>
+
+body{
+    font-family: Arial;
+    background:#fff0f5;
+    padding:20px;
+    margin:0;
+}
+
+.container{
+    max-width:550px;
+    margin:auto;
+    background:white;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 0 10px #ccc;
+}
+
+h2{
+    text-align:center;
+    color:#e91e63;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    font-size:18px;
+    border:1px solid #ccc;
+    border-radius:8px;
+    box-sizing:border-box;
+}
+
+button{
+    padding:12px;
+    font-size:16px;
+    background:#e91e63;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.mainButton{
+    width:100%;
+    margin-top:15px;
+}
+
+.shareButton{
+    width:100%;
+    margin-top:15px;
+    background:#0068ff;
+}
+
+.card{
+    margin-top:15px;
+    padding:12px;
+    border-left:5px solid #e91e63;
+    background:#fff5f8;
+    border-radius:8px;
+}
+
+.info{
+    margin-top:15px;
+    padding:12px;
+    background:#ffe4ec;
+    border-radius:8px;
+}
+
+.setting{
+    margin-bottom:20px;
+    padding:15px;
+    background:#fff3cd;
+    border-radius:10px;
+}
+
+.small{
+    font-size:14px;
+    color:#666;
+    margin-top:8px;
+}
+
+.dateBox{
+    margin-top:10px;
+    padding:10px;
+    background:white;
+    border-radius:8px;
+    border:1px solid #ccc;
+    font-size:17px;
+    width:100%;
+    box-sizing:border-box;
+}
+
+.note{
+    margin-top:20px;
+    padding:12px;
+    background:#fff8dc;
+    border-radius:10px;
+    font-size:14px;
+    color:#666;
+}
+
+.hideBtn{
+    background:transparent;
+    color:#999;
+    padding:2px 6px;
+    font-size:12px;
+    border:none;
+    box-shadow:none;
+    width:auto;
+    opacity:0.7;
+    cursor:pointer;
+}
+.vaccineBox{
+    margin-top:15px;
+    padding:12px;
+    background:#f8f8f8;
+    border-radius:10px;
+}
+
+.vaccineGrid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+    margin-top:10px;
+}
+
+.vaccineGrid label{
+    font-size:14px;
+}
+
+.doneCard{
+    background:#e8f5e9 !important;
+    border-left:5px solid #4caf50 !important;
+}
+
+.overdueCard{
+    background:#f3e5f5 !important;
+    border-left:5px solid #9c27b0 !important;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container" id="captureArea">
+
+<h2>💉 Lịch tiêm chủng dự kiến cho bé</h2>
+
+<div class="setting">
+
+<b>⚙️ Thiết lập ngày tiêm của TYT</b>
+
+<input 
+type="text" 
+id="daysInput"
+placeholder="Ví dụ: 11,23 hoặc 15,20,28">
+
+<button class="mainButton" onclick="saveDays()">
+Lưu ngày tiêm
+</button>
+
+<div class="small">
+Chỉ cần nhập 1 lần. Web sẽ tự nhớ.
+</div>
+
+</div>
+
+<label>
+Nhập ngày sinh của bé (dd/mm/yyyy)
+<div class="vaccineBox">
+
+<label>
+<input type="checkbox" id="noneVaccine">
+ Trẻ chưa tiêm chủng
+</label>
+
+<div class="vaccineGrid">
+
+<label><input type="checkbox" id="v1">5in1+OPV1</label>
+<label><input type="checkbox" id="v2">5in1+OPV2</label>
+<label><input type="checkbox" id="v3">5in1+OPV3</label>
+<label><input type="checkbox" id="ipv1">IPV1</label>
+
+<label><input type="checkbox" id="ipv2">IPV2</label>
+<label><input type="checkbox" id="soi">Sởi</label>
+<label><input type="checkbox" id="mr">MR</label>
+<label><input type="checkbox" id="dpt4">DPT4</label>
+
+<label><input type="checkbox" id="vnnb1">VNNB1</label>
+<label><input type="checkbox" id="vnnb2">VNNB2</label>
+<label><input type="checkbox" id="vnnb3">VNNB3</label>
+
+</div>
+
+</div>
+</label>
+
+<input 
+type="text" 
+id="dob"
+placeholder="Ví dụ: 01/04/2025">
+
+<button class="mainButton" onclick="generate()">
+Xem lịch tiêm
+</button>
+
+<button class="shareButton" onclick="shareImage()">
+📸 Tải ảnh lịch tiêm
+</button>
+
+<div id="result"></div>
+
+<div class="note">
+💡 Có thể sửa tay ngày hẹn hoặc ẩn các mũi không cần hiển thị trước khi tải ảnh.
+</div>
+
+</div>
+
+<script>
+
+// tải dữ liệu
+document.addEventListener("DOMContentLoaded", function(){
+
+    let savedDays = localStorage.getItem("ngayTiem");
+
+    if(savedDays){
+        document.getElementById("daysInput").value = savedDays;
+    }
+
+    let savedDob = localStorage.getItem("ngaySinh");
+
+    if(savedDob){
+        document.getElementById("dob").value = savedDob;
+    }
+
+});
+
+// lưu ngày tiêm
+function saveDays(){
+
+    let value =
+    document.getElementById("daysInput").value;
+
+    value = value.replace(/\s/g,'');
+
+    value = value.replace(/,+$/,'');
+
+    if(value == ""){
+        alert("Vui lòng nhập ngày tiêm");
+        return;
+    }
+
+    localStorage.setItem("ngayTiem", value);
+
+    document.getElementById("daysInput").value = value;
+
+    alert("Đã lưu ngày tiêm!");
+}
+
+// chuyển chuỗi thành date
+function parseDate(str){
+
+    let parts = str.split("/");
+
+    if(parts.length != 3){
+        return null;
+    }
+
+    let day = parseInt(parts[0]);
+    let month = parseInt(parts[1]) - 1;
+    let year = parseInt(parts[2]);
+
+    let d = new Date(year, month, day);
+
+    if(isNaN(d)){
+        return null;
+    }
+
+    return d;
+}
+
+// format ngày
+function formatDate(date){
+
+    let d =
+    String(date.getDate()).padStart(2,'0');
+
+    let m =
+    String(date.getMonth()+1).padStart(2,'0');
+
+    let y = date.getFullYear();
+
+    return `${d}/${m}/${y}`;
+}
+
+// cộng tháng
+function congThang(date, months){
+
+    let d = new Date(date);
+
+    d.setMonth(d.getMonth() + months);
+
+    return d;
+}
+
+// tính tháng tuổi
+function tinhThangTuoi(dob){
+
+    let today = new Date();
+
+    let months =
+    (today.getFullYear() - dob.getFullYear()) * 12;
+
+    months +=
+    today.getMonth() - dob.getMonth();
+
+    if(today.getDate() < dob.getDate()){
+        months--;
+    }
+
+    return months;
+}
+
+// lấy ngày tiêm
+function getNgayTiem(date){
+
+    let saved =
+    localStorage.getItem("ngayTiem");
+
+    if(!saved || saved.trim() == ""){
+        return "Chưa cài ngày tiêm";
+    }
+
+    let arr = saved
+    .split(",")
+    .map(x => parseInt(x.trim()))
+    .filter(x => !isNaN(x))
+    .sort((a,b)=>a-b);
+
+    if(arr.length == 0){
+        return "Chưa cài ngày tiêm";
+    }
+
+    let targetDay = date.getDate();
+
+    let month = date.getMonth()+1;
+    let year = date.getFullYear();
+
+    for(let d of arr){
+
+        if(targetDay <= d){
+
+            return `${String(d).padStart(2,'0')}/${String(month).padStart(2,'0')}/${year}`;
+        }
+    }
+
+    let nextMonth =
+    new Date(year, month, 1);
+
+    return `${String(arr[0]).padStart(2,'0')}/${String(nextMonth.getMonth()+1).padStart(2,'0')}/${nextMonth.getFullYear()}`;
+}
+
+// tạo lịch
+function generate(){
+
+    let input =
+    document.getElementById("dob").value;
+
+    let dob = parseDate(input);
+
+    if(!dob || isNaN(dob)){
+
+        alert(
+        "Vui lòng nhập đúng định dạng dd/mm/yyyy"
+        );
+
+        return;
+    }
+
+    localStorage.setItem("ngaySinh", input);
+
+    let today = new Date();
+
+    let thangTuoi =
+    tinhThangTuoi(dob);
+
+    let html = "";
+
+    html += `
+
+    <div class="info">
+
+    <b>Ngày sinh:</b>
+    ${formatDate(dob)}
+
+    <br><br>
+
+    <b>Tháng tuổi hiện tại:</b>
+    ${thangTuoi} tháng
+
+    <br><br>
+
+    <b>Tính đến ngày:</b>
+    ${formatDate(today)}
+
+    </div>
+
+    `;
+
+    let lich = [
+
+    {m:2,text:"2 tháng (5in1 + OPV + Rota)"},
+    {m:3,text:"3 tháng (5in1 + OPV + Rota)"},
+    {m:4,text:"4 tháng (5in1 + OPV)"},
+    {m:5,text:"5 tháng (IPV)"},
+    {m:9,text:"9 tháng (IPV2 + Sởi)"},
+    {m:12,text:"12 tháng (VNNB 1 + sau đó 1-2 tuần VNNB 2)"},
+    {m:18,text:"18 tháng (DPT + MR)"},
+    {m:24,text:"24 tháng (VNNB mũi 3)"}
+
+    ];
+
+    lich.forEach(item=>{
+
+        let ngay =
+        congThang(dob, item.m);
+
+        let ngayTiem =
+        getNgayTiem(ngay);
+
+let cardId = "card" + item.m;
+
+let cardClass = "";
+
+let daTiem = false;
+
+if(item.m==2 && document.getElementById("v1").checked)
+daTiem=true;
+
+if(item.m==3 && document.getElementById("v2").checked)
+daTiem=true;
+
+if(item.m==4 && document.getElementById("v3").checked)
+daTiem=true;
+
+if(item.m==5 && document.getElementById("ipv1").checked)
+daTiem=true;
+
+if(item.m==9 &&
+document.getElementById("ipv2").checked &&
+document.getElementById("soi").checked)
+daTiem=true;
+
+if(item.m==12 &&
+document.getElementById("vnnb1").checked)
+daTiem=true;
+
+if(item.m==18 &&
+document.getElementById("dpt4").checked &&
+document.getElementById("mr").checked)
+daTiem=true;
+
+if(item.m==24 &&
+document.getElementById("vnnb3").checked)
+daTiem=true;
+
+if(daTiem){
+
+    cardClass = "doneCard";
+
+}else{
+
+    let ngayHen = parseDate(ngayTiem);
+
+    if(today > ngayHen){
+
+        cardClass = "overdueCard";
+    }
+}
+
+        html += `
+
+        <div class="card ${cardClass}" id="${cardId}">
+
+        <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:10px;
+        ">
+
+        <b>${item.text}</b>
+
+        <button
+        class="hideBtn"
+
+        onclick="
+        document.getElementById('${cardId}').style.display='none'
+        ">
+
+        ✕
+
+        </button>
+
+        </div>
+
+        <input
+        type="text"
+        value="${ngayTiem}"
+        class="dateBox">
+
+        </div>
+
+        `;
+    });
+
+    document.getElementById("result").innerHTML = html;
+}
+
+// tải ảnh lịch tiêm
+async function shareImage(){
+
+    let area =
+    document.getElementById("result");
+
+    html2canvas(area).then(function(canvas){
+
+        let link =
+        document.createElement("a");
+
+        link.download =
+        "lich-tiem-chung.png";
+
+        link.href =
+        canvas.toDataURL("image/png");
+
+        link.click();
+
+        alert(
+        "Đã tải ảnh lịch tiêm. Hãy mở Zalo và gửi ảnh vừa tải."
+        );
+
+    });
+
+}
+
+</script>
+
+</body>
+</html>
