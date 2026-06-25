@@ -131,9 +131,21 @@ button{
 
 .vaccineGrid{
     display:grid;
-    grid-template-columns:repeat(4,1fr);
+    grid-template-columns:repeat(4,minmax(120px,1fr));
     gap:8px;
-    margin-top:10px;
+}
+
+.vaccineGrid label{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:14px;
+    white-space:nowrap;
+}
+
+.vaccineGrid input{
+    width:auto;
+    margin:0;
 }
 
 .vaccineGrid label{
@@ -148,6 +160,14 @@ button{
 .overdueCard{
     background:#f3e5f5 !important;
     border-left:5px solid #9c27b0 !important;
+}
+.subTitle{
+    text-align:center;
+    color:#666;
+    font-size:13px;
+    line-height:1.5;
+    margin-top:-6px;
+    margin-bottom:18px;
 }
 </style>
 </head>
@@ -311,11 +331,12 @@ function formatDate(date){
 // cộng tháng
 function congThang(date, months){
 
-    let d = new Date(date);
+    return new Date(
+        date.getFullYear(),
+        date.getMonth()+months,
+        date.getDate()
+    );
 
-    d.setMonth(d.getMonth() + months);
-
-    return d;
 }
 
 // tính tháng tuổi
@@ -438,7 +459,11 @@ function generate(){
     lich.forEach(item=>{
 
         let ngay =
-        congThang(dob, item.m);
+        new Date(
+    dob.getFullYear(),
+    dob.getMonth()+item.m,
+    dob.getDate()
+);
 
         let ngayTiem =
         getNgayTiem(ngay);
